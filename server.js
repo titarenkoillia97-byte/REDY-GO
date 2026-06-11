@@ -78,7 +78,7 @@ initDB();
 
 // Главная страница
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Получить текущее количество лайков
