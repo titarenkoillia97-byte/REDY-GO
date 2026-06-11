@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Раздача статических файлов (твоего фронтенда)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 /* ==========================================================================
    БАЗА ДАННЫХ (POSTGRESQL)
