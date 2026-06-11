@@ -2,198 +2,55 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REDY GO — Клуб Знайомств</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadyGo Club | Exclusive</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        :root { --accent: #E50027; --dark: #050505; }
+        body { background: var(--dark); color: white; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         
-        body { 
-            background-color: #050505; 
-            color: #FFFFFF; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-image: radial-gradient(circle at top, #1a0508 0%, #050505 70%);
-        }
+        .card { width: 90%; max-width: 380px; text-align: center; }
         
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            padding: 30px 20px;
-            text-align: center;
-        }
+        /* Крутой блок с логотипами */
+        .logo-container { margin-bottom: 3rem; }
+        .logo-container img { display: block; margin: 0 auto; filter: brightness(0) invert(1); width: 180px; }
+        .logo-container .mark { width: 80px; margin-bottom: 15px; }
 
-        /* Стильная подложка для логотипов, чтобы они сливались идеально */
-        .brand-badge {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 25px 30px 20px 30px;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 35px rgba(229, 0, 39, 0.15);
-            margin-bottom: 40px;
-        }
-
-        .logo-icon { width: 70px; height: auto; }
-        .logo-text { width: 160px; height: auto; }
+        h1 { font-size: 1.2rem; margin-bottom: 2rem; color: #777; letter-spacing: 2px; text-transform: uppercase; }
         
-        .logo-subtitle { 
-            font-size: 11px; 
-            letter-spacing: 4px; 
-            color: #111; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            margin-top: 5px;
-        }
-
-        /* Экраны */
-        .screen { display: none; width: 100%; animation: fadeIn 0.4s ease-out; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .input-container { position: relative; margin-bottom: 20px; }
-        .input-label {
-            font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px;
-            margin-bottom: 8px; display: block; text-align: center;
-        }
+        input { width: 100%; background: #111; border: 1px solid #222; border-radius: 12px; padding: 18px; color: white; font-size: 1.1rem; text-align: center; margin-bottom: 15px; outline: none; transition: .3s; }
+        input:focus { border-color: var(--accent); }
         
-        input[type="tel"] {
-            width: 100%; background: #111; border: 1px solid #333; padding: 20px; 
-            border-radius: 16px; color: #fff; font-size: 20px; font-weight: 700; 
-            letter-spacing: 2px; text-align: center; outline: none; transition: 0.3s;
-        }
-        input[type="tel"]:focus { border-color: #E50027; background: #151515; box-shadow: 0 0 20px rgba(225, 0, 39, 0.2); }
+        button { width: 100%; padding: 18px; border: none; border-radius: 12px; background: var(--accent); color: white; font-weight: bold; font-size: 1rem; text-transform: uppercase; cursor: pointer; transition: .3s; }
+        button:hover { background: #ff0b34; box-shadow: 0 0 20px rgba(229, 0, 39, 0.4); }
 
-        .btn {
-            width: 100%; background: #E50027; color: #fff; border: none; padding: 20px; 
-            border-radius: 16px; font-size: 15px; font-weight: 800; text-transform: uppercase; 
-            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
-        }
-        .btn:hover { background: #ff0b34; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(225, 0, 39, 0.4); }
-        .btn:disabled { background: #333; color: #777; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        .hint-box { font-size: 12px; color: #555; margin-top: 25px; line-height: 1.6; }
-        .hint-box span { color: #00cc66; font-weight: bold; }
-
-        /* Лоадер */
-        .spinner {
-            width: 50px; height: 50px; border: 4px solid #222; border-top: 4px solid #E50027;
-            border-radius: 50%; margin: 0 auto 20px auto; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #fff; }
-        .sub-text { font-size: 14px; color: #888; margin-bottom: 30px; line-height: 1.5; }
+        .loader { display: none; font-size: 0.9rem; color: var(--accent); }
     </style>
 </head>
 <body>
-
-    <div class="login-card">
+    <div class="card">
+        <div class="logo-container">
+            <img src="/logo-mark.png" class="mark" alt="Logo">
+            <img src="/logo-text.png" alt="ReadyGo">
+        </div>
         
-        <div class="brand-badge">
-            <img src="/logo-mark.png" alt="RG" class="logo-icon">
-            <img src="/logo-text.png" alt="REDY GO" class="logo-text">
-            <div class="logo-subtitle">Клуб знайомств</div>
+        <div id="auth-form">
+            <input type="tel" id="phone" value="+380">
+            <button onclick="login()">Увійти в ReadyGo</button>
         </div>
-
-        <div id="screen-login" class="screen active">
-            <div class="input-container">
-                <span class="input-label">Ваш номер телефону</span>
-                <input type="tel" id="phone-input" placeholder="+380 97 757 0986" value="+380">
-            </div>
-            <button id="go-btn" class="btn" onclick="handleLogin()">УВІЙТИ В КЛУБ</button>
-            
-            <div class="hint-box">
-                Безпечно та анонімно.<br>
-                <span>●</span> Верифікація через Telegram
-            </div>
-        </div>
-
-        <div id="screen-wait" class="screen">
-            <div class="spinner"></div>
-            <div class="status-text">Очікуємо підтвердження</div>
-            <div class="sub-text">Відкрийте Telegram та підтвердіть вхід, щоб продовжити.</div>
-            <button id="tg-link-btn" class="btn" style="background:#0088cc;" onclick="openTelegram()">ВІДКРИТИ TELEGRAM</button>
-        </div>
-
+        
+        <div id="loader" class="loader">Чекаємо підтвердження у боті @ReadyGoClubBot...</div>
     </div>
 
     <script>
-        let currentToken = '';
-        let pollingInterval = null;
-
-        async function handleLogin() {
-            const phoneInput = document.getElementById('phone-input').value;
-            const goBtn = document.getElementById('go-btn');
-            
-            if(!phoneInput || phoneInput.length < 10) {
-                alert('Будь ласка, введіть коректний номер телефону (мінімум 10 символів)');
-                return;
+        async function login() {
+            const phone = document.getElementById('phone').value;
+            const res = await fetch('/api/auth', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({phone}) });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('auth-form').style.display = 'none';
+                document.getElementById('loader').style.display = 'block';
+                window.location.href = `https://t.me/ReadyGoClubBot?start=${data.token}`;
             }
-
-            // Блокируем кнопку от двойных нажатий
-            goBtn.disabled = true;
-            goBtn.innerText = 'ОБРОБКА...';
-
-            try {
-                // Отправляем запрос на наш сервер
-                const response = await fetch('/api/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phoneInput })
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.token) {
-                    currentToken = data.token;
-                    
-                    // Переключаем экраны
-                    document.getElementById('screen-login').classList.remove('active');
-                    document.getElementById('screen-wait').classList.add('active');
-                    
-                    // Начинаем проверять статус
-                    startStatusPolling(currentToken);
-                } else {
-                    alert('Помилка: ' + (data.error || 'Щось пішло не так'));
-                    resetButton(goBtn);
-                }
-            } catch (err) {
-                console.error('Помилка запиту:', err);
-                alert('Не вдалося зв’язатися з сервером. Зачекайте пару хвилин поки Railway оновить проект.');
-                resetButton(goBtn);
-            }
-        }
-
-        function resetButton(btn) {
-            btn.disabled = false;
-            btn.innerText = 'УВІЙТИ В КЛУБ';
-        }
-
-        function openTelegram() {
-            if(!currentToken) return;
-            // Перенаправление на твоего бота (замени redy_go_bot на свой юзернейм если нужно)
-            window.location.href = `https://t.me/redy_go_bot?start=auth_${currentToken}`;
-        }
-
-        function startStatusPolling(token) {
-            pollingInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`/api/auth-status?token=${token}`);
-                    const data = await res.json();
-                    
-                    if (data.status === 'verified') {
-                        clearInterval(pollingInterval);
-                        alert('✅ Верифікація успішна! Ласкаво просимо.');
-                        // Здесь в будущем можно добавить переход на внутреннюю страницу
-                    }
-                } catch (err) {
-                    // Игнорируем ошибки сети при поллинге
-                }
-            }, 2500);
         }
     </script>
 </body>
