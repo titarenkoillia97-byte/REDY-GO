@@ -3,302 +3,181 @@ require('dotenv').config();
 
 const express = require('express');
 const { Pool } = require('pg');
-const axios   = require('axios');
-const crypto  = require('crypto');
-const path    = require('path');
+const axios = require('axios');
+const crypto = require('crypto');
+const path = require('path');
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* ═══════════════════════════════════════════════════════════
-   БАЗА ДАНИХ
-════════════════════════════════════════════════════════════ */
-const dbUrl = process.env.DATABASE_URL;
+// Мидлвары для парсинга данных
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const pool = new Pool({
-  connectionString: dbUrl,
-  ssl: dbUrl && !dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1')
-    ? { rejectUnauthorized: false }
-    : false,
-});
-
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id          SERIAL PRIMARY KEY,
-      phone       VARCHAR(20) UNIQUE NOT NULL,
-      is_premium  BOOLEAN    DEFAULT FALSE,
-      created_at  TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS likes (
-      id           SERIAL PRIMARY KEY,
-      user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      from_fake_id INTEGER NOT NULL,
-      created_at   TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_likes_user ON likes(user_id);
-  `);
-  console.log('✅ Таблиці бази даних ініціалізовано');
-}
-
-/* ═══════════════════════════════════════════════════════════
-   ДВИГУН ФЕЙКОВИХ ЛАЙКІВ
-════════════════════════════════════════════════════════════ */
-const FAKE_IDS = Array.from({ length: 20 }, (_, i) => 1001 + i);
-
-async function giveFakeLikes(userId) {
-  const shuffled = [...FAKE_IDS].sort(() => Math.random() - 0.5);
-  const picked   = shuffled.slice(0, 5);
-  await Promise.all(
-    picked.map(fid =>
-      pool.query(
-        'INSERT INTO likes (user_id, from_fake_id) VALUES ($1, $2)',
-        [userId, fid]
-      )
-    )
-  );
-}
-
-async function runFakeLikesEngine() {
-  try {
-    const { rows } = await pool.query('SELECT id FROM users');
-    if (!rows.length) return;
-    await Promise.all(rows.map(r => giveFakeLikes(r.id)));
-    console.log(`💘 Фейк-лайки: по 5 лайків → ${rows.length} користувачів`);
-  } catch (e) {
-    console.error('❌ Помилка двигуна лайків:', e.message);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   MIDDLEWARE
-════════════════════════════════════════════════════════════ */
+// Раздача статических файлов (твоего фронтенда)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Зберігаємо raw-буфер для перевірки підпису вебхука Cryptomus
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf.toString('utf8');
-    },
-  })
-);
+/* ==========================================================================
+   БАЗА ДАННЫХ (POSTGRESQL)
+   ========================================================================== */
+const dbUrl = process.env.DATABASE_URL;
 
-/* ═══════════════════════════════════════════════════════════
-   МАРШРУТИ
-════════════════════════════════════════════════════════════ */
+if (!dbUrl) {
+    console.error('⚠️ DATABASE_URL не встановлена! Переконайся, що PostgreSQL підключено.');
+}
 
-// Перевірка стану сервера
-app.get('/api/health', (_req, res) =>
-  res.json({ ok: true, ts: new Date().toISOString() })
-);
+const pool = new Pool({
+    connectionString: dbUrl,
+    ssl: dbUrl && !dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1')
+        ? { rejectUnauthorized: false }
+        : false
+});
 
-// ── Авторизація / Реєстрація за номером телефону ──────────
-app.post('/api/auth', async (req, res) => {
-  const { phone } = req.body ?? {};
+// Инициализация таблиц при запуске
+async function initDB() {
+    try {
+        // Таблица пользователей
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100),
+                likes_count INT DEFAULT 0,
+                is_premium BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        
+        // Таблица платежей
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS payments (
+                id SERIAL PRIMARY KEY,
+                order_id VARCHAR(100) UNIQUE,
+                amount VARCHAR(50),
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
 
-  if (!phone || typeof phone !== 'string' || phone.trim().length < 10) {
-    return res.status(400).json({ error: 'Невірний номер телефону' });
-  }
-
-  const p = phone.replace(/\s/g, '').trim();
-
-  try {
-    const existing = await pool.query(
-      'SELECT id, phone, is_premium FROM users WHERE phone = $1',
-      [p]
-    );
-
-    if (existing.rows.length > 0) {
-      const user = existing.rows[0];
-      console.log(`📱 Вхід: ${p} (ID ${user.id})`);
-      return res.json(user);
+        // Проверяем, есть ли уже тестовые данные, если нет — добавляем фейк-лайки
+        const res = await pool.query('SELECT COUNT(*) FROM users');
+        if (parseInt(res.rows[0].count) === 0) {
+            await pool.query("INSERT INTO users (username, likes_count) VALUES ('Система', 10543)");
+            console.log('✅ Базовые данные успешно инициализированы.');
+        }
+        
+        console.log('🚀 База данных успешно подключена и проверена.');
+    } catch (err) {
+        console.error('💥 Критическая ошибка инициализации БД:', err.message);
     }
+}
+initDB();
 
-    const inserted = await pool.query(
-      'INSERT INTO users (phone) VALUES ($1) RETURNING id, phone, is_premium',
-      [p]
-    );
-    const user = inserted.rows[0];
-    console.log(`🆕 Нова реєстрація: ${p} (ID ${user.id})`);
+/* ==========================================================================
+   МАРШРУТЫ И API
+   ========================================================================== */
 
-    // Відразу видаємо 5 стартових фейкових лайків
-    await giveFakeLikes(user.id);
-    console.log(`💘 Стартові лайки надіслані → користувач ${user.id}`);
-
-    return res.json(user);
-  } catch (e) {
-    console.error('❌ /api/auth:', e.message);
-    res.status(500).json({ error: 'Внутрішня помилка сервера' });
-  }
+// Главная страница
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ── Профіль користувача ───────────────────────────────────
-app.get('/api/profile/:id', async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Невірний ID' });
+// Получить текущее количество лайков
+app.get('/api/likes', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT SUM(likes_count) as total FROM users");
+        const totalLikes = result.rows[0].total || 10543; // фолбек если пусто
+        res.json({ success: true, likes: parseInt(totalLikes) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+}
+);
 
-  try {
-    const { rows } = await pool.query(
-      'SELECT id, phone, is_premium FROM users WHERE id = $1',
-      [id]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Не знайдено' });
-    res.json(rows[0]);
-  } catch (e) {
-    console.error('❌ /api/profile:', e.message);
-    res.status(500).json({ error: 'Внутрішня помилка сервера' });
-  }
-});
-
-// ── Кількість лайків ──────────────────────────────────────
-app.get('/api/likes/:id', async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Невірний ID' });
-
-  try {
-    const { rows } = await pool.query(
-      'SELECT COUNT(*) AS cnt FROM likes WHERE user_id = $1',
-      [id]
-    );
-    res.json({ count: parseInt(rows[0].cnt, 10) });
-  } catch (e) {
-    console.error('❌ /api/likes:', e.message);
-    res.status(500).json({ error: 'Внутрішня помилка сервера' });
-  }
-});
-
-// ── Створення платежу Cryptomus ───────────────────────────
+// Эндпоинт для создания платежа в Cryptomus
 app.post('/api/pay', async (req, res) => {
-  const { userId } = req.body ?? {};
-  if (!userId) return res.status(400).json({ error: "userId обов'язковий" });
+    try {
+        const { amount, currency } = req.body;
+        const orderId = 'order_' + Date.now();
 
-  const merchant = process.env.CRYPTOMUS_MERCHANT_ID;
-  const apiKey   = process.env.CRYPTOMUS_API_KEY;
+        const payload = {
+            amount: amount || '5.00',
+            currency: currency || 'USD',
+            order_id: orderId,
+            url_callback: `${process.env.APP_URL}/api/callback`,
+            url_success: `${process.env.APP_URL}/?payment=success`,
+            url_return: `${process.env.APP_URL}/?payment=cancel`
+        };
 
-  if (!merchant || !apiKey) {
-    console.error('❌ Cryptomus: ключі не налаштовані (CRYPTOMUS_MERCHANT_ID / CRYPTOMUS_API_KEY)');
-    return res.status(500).json({ error: 'Платіжна система не налаштована' });
-  }
+        // Логика подписи для Cryptomus API
+        const jsonPayload = JSON.stringify(payload);
+        const sign = crypto
+            .createHash('md5')
+            .update(Buffer.from(jsonPayload).toString('base64') + process.env.CRYPTOMUS_API_KEY)
+            .digest('hex');
 
-  const appUrl  = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
-  const orderId = `redy_${userId}_${Date.now()}`;
+        const response = await axios.post('https://api.cryptomus.com/v1/payment', payload, {
+            headers: {
+                merchant: process.env.CRYPTOMUS_MERCHANT_ID,
+                sign: sign,
+                'Content-Type': 'application/json'
+            }
+        });
 
-  const payload = {
-    amount:              '5.00',
-    currency:            'USD',
-    order_id:            orderId,
-    url_return:          appUrl,
-    url_success:         `${appUrl}?payment=success`,
-    url_callback:        `${appUrl}/api/webhook/cryptomus`,
-    is_payment_multiple: false,
-    lifetime:            3600,
-  };
+        // Сохраняем платеж в БД со статусом pending
+        await pool.query(
+            'INSERT INTO payments (order_id, amount, status) VALUES ($1, $2, $3)',
+            [orderId, payload.amount, 'pending']
+        );
 
-  const b64  = Buffer.from(JSON.stringify(payload)).toString('base64');
-  const sign = crypto.createHash('md5').update(b64 + apiKey).digest('hex');
-
-  try {
-    console.log(`💳 Створення платежу | user=${userId} | order=${orderId}`);
-
-    const { data } = await axios.post(
-      'https://api.cryptomus.com/v1/payment',
-      payload,
-      {
-        headers: {
-          merchant,
-          sign,
-          'Content-Type': 'application/json',
-        },
-        timeout: 12_000,
-      }
-    );
-
-    const url = data?.result?.url;
-    if (!url) {
-      console.error('❌ Cryptomus не повернув URL:', JSON.stringify(data));
-      return res.status(502).json({ error: 'Помилка платіжного сервісу' });
+        res.json({ success: true, url: response.data.result.url });
+    } catch (err) {
+        console.error('Ошибка создания платежа:', err.response ? err.response.data : err.message);
+        res.status(500).json({ success: false, error: 'Не удалось создать платеж' });
     }
-
-    console.log(`✅ Платіжна сесія: ${data.result.uuid}`);
-    res.json({ url });
-  } catch (e) {
-    const detail = e.response ? JSON.stringify(e.response.data) : e.message;
-    console.error('❌ Cryptomus API:', detail);
-    res.status(502).json({ error: 'Помилка підключення до Cryptomus' });
-  }
 });
 
-// ── Вебхук Cryptomus ──────────────────────────────────────
-app.post('/api/webhook/cryptomus', async (req, res) => {
-  try {
-    const data         = req.body;
-    const receivedSign = data?.sign;
+// Вебхук (Callback) от Cryptomus для фиксации оплаты
+app.post('/api/callback', async (req, res) => {
+    try {
+        const { sign, uuid, order_id, status } = req.body;
 
-    // Перевірка підпису: видаляємо sign, решту підписуємо
-    const { sign: _s, ...withoutSign } = data ?? {};
-    const b64      = Buffer.from(JSON.stringify(withoutSign)).toString('base64');
-    const expected = crypto
-      .createHash('md5')
-      .update(b64 + (process.env.CRYPTOMUS_API_KEY ?? ''))
-      .digest('hex');
+        // Проверка подписи от Cryptomus для безопасности
+        const data = { ...req.body };
+        delete data.sign;
 
-    if (receivedSign !== expected) {
-      console.warn(
-        `⚠️  Вебхук: невірний підпис.\n   Отримано:   ${receivedSign}\n   Очікувалось: ${expected}`
-      );
-      // УВАГА: якщо вебхуки не проходять — тимчасово закоментуй наступний рядок і перевір логи
-      return res.status(400).json({ error: 'Невірний підпис' });
+        const checkSign = crypto
+            .createHash('md5')
+            .update(Buffer.from(JSON.stringify(data)).toString('base64') + process.env.CRYPTOMUS_API_KEY)
+            .digest('hex');
+
+        if (sign !== checkSign) {
+            return res.status(400).send('Invalid signature');
+        }
+
+        if (status === 'paid' || status === 'paid_over') {
+            // Обновляем статус в БД
+            await pool.query('UPDATE payments SET status = $1 WHERE order_id = $2', ['success', order_id]);
+            
+            // Накручиваем лайки в базу за успешную оплату (например +500 лайков)
+            await pool.query("UPDATE users SET likes_count = likes_count + 500 WHERE username = 'Система'");
+            
+            console.log(`💰 Заказ ${order_id} успешно оплачен! Лайки добавлены.`);
+        }
+
+        res.status(200).send('OK');
+    } catch (err) {
+        console.error('Ошибка в обработке вебхука:', err.message);
+        res.status(500).send('Internal Error');
     }
-
-    const { status, order_id: orderId } = data;
-    console.log(`🔔 Вебхук | status="${status}" | order="${orderId}"`);
-
-    if (status === 'paid' || status === 'paid_over') {
-      // Формат orderId: redy_{userId}_{timestamp}
-      const uid = parseInt((orderId ?? '').split('_')[1], 10);
-
-      if (!isNaN(uid)) {
-        await pool.query('UPDATE users SET is_premium = TRUE WHERE id = $1', [uid]);
-        console.log(`🎉 Преміум активовано → користувач ${uid}`);
-      } else {
-        console.warn('⚠️  Не вдалося визначити userId з orderId:', orderId);
-      }
-    }
-
-    res.status(200).json({ status: 'ok' });
-  } catch (e) {
-    console.error('❌ Вебхук помилка:', e.message);
-    res.status(500).json({ error: 'Внутрішня помилка' });
-  }
 });
 
-// SPA fallback — повертаємо index.html для всіх не-API маршрутів
-app.get('*', (_req, res) =>
-  res.sendFile(path.join(__dirname, 'public', 'index.html'))
-);
-
-/* ═══════════════════════════════════════════════════════════
-   ЗАПУСК
-════════════════════════════════════════════════════════════ */
-(async () => {
-  if (!dbUrl) {
-    console.warn('⚠️  DATABASE_URL не встановлена! Переконайся, що PostgreSQL підключено.');
-  }
-
-  await initDB();
-
-  // Перший запуск двигуна через 5 сек після старту, потім — кожні 10 хвилин
-  setTimeout(runFakeLikesEngine, 5_000);
-  setInterval(runFakeLikesEngine, 10 * 60 * 1_000);
-  console.log('⚙️  Двигун фейк-лайків активний (кожні 10 хв)');
-
-  app.listen(PORT, () => {
-    console.log(`🚀 REDY GO сервер запущено → http://localhost:${PORT}`);
-  });
-})().catch(e => {
-  console.error('💥 Критична помилка запуску:', e.message);
-  process.exit(1);
+/* ==========================================================================
+   ЗАПУСК СЕРВЕРА
+   ========================================================================== */
+// Важно: '0.0.0.0' обязателен для работы внутри контейнеров Railway
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`=============================================`);
+    console.log(`🚀 Сервер успешно запущен!`);
+    console.log(`🌍 Доступен по порту: ${PORT}`);
+    console.log(`=============================================`);
 });
