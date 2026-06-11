@@ -8,27 +8,59 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #000000; color: #FFFFFF; overflow-x: hidden; }
         
-        /* Фикс белого фона логотипа + Инверсия в темный стиль */
-        .logo-container { text-align: center; padding: 25px 10px 10px 10px; background: #000; }
-        .logo-container img { 
-            max-width: 140px; 
-            height: auto; 
-            display: block; 
-            margin: 0 auto;
-            filter: invert(1) hue-rotate(145deg) brightness(1.1) contrast(1.2); 
+        /* 1. УЛЬТРА-СТИЛЬНАЯ ШАПКА С ИДЕАЛЬНОЙ ВЕРСТКОЙ ЛОГО */
+        .logo-container { 
+            text-align: center; 
+            padding: 40px 10px 20px 10px; 
+            background: #000; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Блок с RG иконокой (Герб) */
+        .rg-icon {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 10px;
+            /* Исправление белого фона + Слияние */
+            filter: screen;
+            -webkit-filter: screen;
+            mix-blend-mode: screen; 
+        }
+
+        /* Блок с текстом REDY GO */
+        .redy-go-text {
+            max-width: 250px;
+            height: auto;
+            /* Исправление белого фона + Слияние + Делаем GO белым */
+            filter: invert(1) hue-rotate(180deg) brightness(1.2);
+            -webkit-filter: invert(1) hue-rotate(180deg) brightness(1.2);
         }
         
-        .logo-subtitle { text-align: center; font-size: 11px; letter-spacing: 3px; color: #E50027; font-weight: 700; text-transform: uppercase; margin-top: 8px; }
+        .logo-subtitle { 
+            text-align: center; 
+            font-size: 11px; 
+            letter-spacing: 3px; 
+            color: #E50027; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            margin-top: 15px; 
+        }
 
-        .container { max-width: 450px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; min-height: 80vh; justify-content: center; }
+        /* 2. КОНТЕЙНЕР ДЛЯ БАЛАНСА ЛАЙАУТА */
+        .container { max-width: 450px; margin: 0 auto; padding: 0 20px 20px 20px; display: flex; flex-direction: column; min-height: 70vh; justify-content: center; }
+        
         .screen { display: none; width: 100%; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        .screen.active { display: block; animation: fadeIn 0.5s ease-in-out; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2 { font-size: 14px; text-transform: uppercase; color: #E50027; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
+        h2 { font-size: 14px; text-transform: uppercase; color: #E50027; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; text-align: center;}
+        
         .input-group { position: relative; margin-bottom: 20px; }
         
+        /* СТИЛЬ ВВОДА НОМЕРА */
         input[type="tel"] {
             width: 100%; background: #0d0d0d; border: 1px solid #222; padding: 18px; border-radius: 12px;
             color: #fff; font-size: 16px; font-weight: 600; letter-spacing: 1px; transition: all 0.3s ease;
@@ -36,6 +68,7 @@
         }
         input[type="tel"]:focus { border-color: #E50027; box-shadow: 0 0 15px rgba(225, 0, 39, 0.2); }
 
+        /* СТИЛЬ КНОПКИ GO */
         .btn {
             width: 100%; background: #E50027; color: #fff; border: none; padding: 18px; border-radius: 12px;
             font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; cursor: pointer;
@@ -53,36 +86,13 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .status-text { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
         .sub-text { font-size: 13px; color: #666; margin-bottom: 30px; line-height: 1.5; }
-
-        /* Лента анкет */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .card { background: #0a0a0a; border: 1px solid #111; border-radius: 16px; overflow: hidden; position: relative; }
-        .photo-wrapper { width: 100%; aspect-ratio: 3/4; position: relative; background: #151515; }
-        .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-        .blur { filter: blur(18px); transform: scale(1.1); }
-        
-        .pay-overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.4);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px;
-        }
-        .card-info { padding: 12px; font-weight: 700; font-size: 15px; }
-        .card-info span { color: #666; font-size: 13px; font-weight: 400; margin-left: 5px; }
-
-        .unlock-btn {
-            background: #E50027; color: white; border: none; padding: 10px 12px; border-radius: 8px;
-            font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; letter-spacing: 0.5px;
-        }
-
-        /* Модалка */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
-        .modal.active { display: flex; }
-        .modal-content { background: #0d0d0d; border: 1px solid #E50027; padding: 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="logo-container">
-        <img src="/ChatGPT Image 11 июн. 2026 г., 23_40_08.png" alt="REDY GO">
+        <img src="/ChatGPT Image 11 июн. 2026 г., 23_40_08.png" alt="RG" class="rg-icon">
+        <img src="/ChatGPT Image 11 июн. 2026 г., 23_44_32.png" alt="REDY GO" class="redy-go-text">
         <div class="logo-subtitle">Клуб знайомств · 18+</div>
     </div>
 
@@ -105,25 +115,10 @@
             </div>
         </div>
 
-        <div id="screen-main" class="screen">
-            <h2>Каталог Клубу</h2>
-            <div class="grid" id="catalog-grid"></div>
-        </div>
-
-    </div>
-
-    <div class="modal" id="pay-modal">
-        <div class="modal-content">
-            <h3 style="color:#E50027; margin-bottom:15px; text-transform:uppercase; font-size:18px;">Доступ Обмежено</h3>
-            <p style="font-size:14px; color:#aaa; margin-bottom:25px; line-height:1.4;">Для зняття блюру з усіх фото та активації прямого чату необхідна одноразова активація профілю.</p>
-            <button class="btn" id="pay-bot-url" style="margin-bottom:12px;">Оплатити через @CryptoBot</button>
-            <button class="btn" style="background:#222; color:#aaa; box-shadow:none;" onclick="closeModal()">Закрити</button>
-        </div>
     </div>
 
     <script>
         let currentToken = '';
-        let userId = '';
         let pollingInterval = null;
 
         // Фикс работы кнопки GO
@@ -142,114 +137,11 @@
             goBtn.innerText = 'ОБРОБКА...';
 
             try {
+                // Пытаемся авторизоваться. Сервер должен быть запущен и БД доступна!
                 const response = await fetch('/api/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone: phoneInput })
                 });
 
-                const data = await response.json();
-                console.log('Ответ сервера на auth:', data);
-
-                if (data.success && data.token) {
-                    currentToken = data.token;
-                    
-                    // Переключаем экраны
-                    document.getElementById('screen-login').classList.remove('active');
-                    document.getElementById('screen-wait').classList.add('active');
-                    
-                    // Запускаем проверку статуса каждые 2 секунды
-                    startStatusPolling(currentToken);
-                } else {
-                    alert('Помилка авторизації: ' + (data.error || 'Невідома помилка'));
-                    goBtn.disabled = false;
-                    goBtn.innerText = 'GO – УВІЙТИ В КЛУБ';
-                }
-            } catch (err) {
-                console.error('Критическая ошибка fetch:', err);
-                alert('Не вдалося зв’язатися з сервером. Перевірте логи Railway.');
-                goBtn.disabled = false;
-                goBtn.innerText = 'GO – УВІЙТИ В КЛУБ';
-            }
-        }
-
-        function openTelegram() {
-            if(!currentToken) return;
-            // Ссылка ведет на твоего бота. Замени ИМЯ_БОТА в переменных Railway
-            window.location.href = `https://t.me/redy_go_bot?start=auth_${currentToken}`;
-        }
-
-        function startStatusPolling(token) {
-            pollingInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`/api/auth-status?token=${token}`);
-                    const data = await res.json();
-                    
-                    if (data.status === 'verified') {
-                        clearInterval(pollingInterval);
-                        userId = data.id;
-                        renderCatalog(data.is_premium);
-                        
-                        document.getElementById('screen-wait').classList.remove('active');
-                        document.getElementById('screen-main').classList.add('active');
-                    }
-                } catch (err) {
-                    console.error('Ошибка поллинга статуса:', err);
-                }
-            }, 2000);
-        }
-
-        // Рендеринг фейковых анкет для теста MVP
-        function renderCatalog(isPremium) {
-            const grid = document.getElementById('catalog-grid');
-            grid.innerHTML = '';
-            
-            const girls = [
-                { name: 'Аліна', age: 22, img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400' },
-                { name: 'Каріна', age: 24, img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400' }
-            ];
-
-            girls.forEach(g => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="photo-wrapper">
-                        <img src="${g.img}" class="${isPremium ? '' : 'blur'}">
-                        ${isPremium ? '' : `
-                            <div class="pay-overlay">
-                                <button class="unlock-btn" onclick="openPayModal()">Відкрити ($5)</button>
-                            </div>
-                        `}
-                    </div>
-                    <div class="card-info">${g.name}<span>${g.age}</span></div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        async function openPayModal() {
-            try {
-                const res = await fetch('/api/create-invoice', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: userId })
-                });
-                const data = await res.json();
-                
-                if (data.pay_url) {
-                    document.getElementById('pay-bot-url').onclick = () => {
-                        window.location.href = data.pay_url;
-                    };
-                    document.getElementById('pay-modal').classList.add('active');
-                } else {
-                    alert('Помилка генерації рахунку: ' + data.error);
-                }
-            } catch (err) {
-                alert('Не вдалося створити інвойс.');
-            }
-        }
-
-        function closeModal() { document.getElementById('pay-modal').classList.remove('active'); }
-    </script>
-</body>
-</html>
+                // Если сервер недоступен, эта
