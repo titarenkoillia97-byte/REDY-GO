@@ -6,104 +6,180 @@
     <title>REDY GO — Клуб Знайомств</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #000000; color: #FFFFFF; overflow-x: hidden; }
         
-        /* 1. УЛЬТРА-СТИЛЬНАЯ ШАПКА С ИДЕАЛЬНОЙ ВЕРСТКОЙ ЛОГО */
-        .logo-container { 
-            text-align: center; 
-            padding: 40px 10px 20px 10px; 
-            background: #000; 
+        /* Глубокий темный фон с легким радиальным красным свечением сверху */
+        body { 
+            background-color: #000000; 
+            color: #FFFFFF; 
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at top, #140103 0%, #000000 65%);
+        }
+        
+        /* Основная карточка интерфейса */
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 24px;
+            text-align: center;
         }
 
-        /* Блок с RG иконокой (Герб) */
-        .rg-icon {
-            max-width: 100px;
-            height: auto;
-            margin-bottom: 10px;
-            /* Исправление белого фона + Слияние */
-            filter: screen;
-            -webkit-filter: screen;
-            mix-blend-mode: screen; 
+        /* Блок логотипов */
+        .logo-box {
+            margin-bottom: 45px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
         }
 
-        /* Блок с текстом REDY GO */
-        .redy-go-text {
-            max-width: 250px;
+        /* Инверсия белого фона в черный + сохранение красного цвета + неоновый drop-shadow */
+        .logo-icon {
+            max-width: 95px;
             height: auto;
-            /* Исправление белого фона + Слияние + Делаем GO белым */
-            filter: invert(1) hue-rotate(180deg) brightness(1.2);
-            -webkit-filter: invert(1) hue-rotate(180deg) brightness(1.2);
+            display: block;
+            filter: invert(1) hue-rotate(180deg) brightness(1.1) drop-shadow(0 0 25px rgba(229, 0, 39, 0.4));
+        }
+
+        .logo-text {
+            max-width: 230px;
+            height: auto;
+            display: block;
+            filter: invert(1) hue-rotate(180deg) brightness(1.2) drop-shadow(0 0 15px rgba(229, 0, 39, 0.25));
         }
         
         .logo-subtitle { 
-            text-align: center; 
             font-size: 11px; 
-            letter-spacing: 3px; 
+            letter-spacing: 5px; 
             color: #E50027; 
-            font-weight: 700; 
+            font-weight: 800; 
             text-transform: uppercase; 
-            margin-top: 15px; 
+            margin-top: 5px;
+            text-shadow: 0 0 8px rgba(229, 0, 39, 0.5);
         }
 
-        /* 2. КОНТЕЙНЕР ДЛЯ БАЛАНСА ЛАЙАУТА */
-        .container { max-width: 450px; margin: 0 auto; padding: 0 20px 20px 20px; display: flex; flex-direction: column; min-height: 70vh; justify-content: center; }
-        
+        /* Управление экранами */
         .screen { display: none; width: 100%; }
-        .screen.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        .screen.active { display: block; animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2 { font-size: 14px; text-transform: uppercase; color: #E50027; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; text-align: center;}
+        h2 { 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            color: #E50027; 
+            letter-spacing: 2px; 
+            margin-bottom: 18px; 
+            font-weight: 800; 
+        }
         
-        .input-group { position: relative; margin-bottom: 20px; }
+        .input-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            font-size: 11px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+            text-align: left;
+            padding-left: 4px;
+        }
         
-        /* СТИЛЬ ВВОДА НОМЕРА */
+        /* Поле ввода телефона */
         input[type="tel"] {
-            width: 100%; background: #0d0d0d; border: 1px solid #222; padding: 18px; border-radius: 12px;
-            color: #fff; font-size: 16px; font-weight: 600; letter-spacing: 1px; transition: all 0.3s ease;
-            outline: none; text-align: center;
+            width: 100%; 
+            background: #070707; 
+            border: 1px solid #1a1a1a; 
+            padding: 18px; 
+            border-radius: 14px;
+            color: #fff; 
+            font-size: 18px; 
+            font-weight: 600; 
+            letter-spacing: 1.5px; 
+            transition: all 0.3s ease;
+            outline: none; 
+            text-align: center;
         }
-        input[type="tel"]:focus { border-color: #E50027; box-shadow: 0 0 15px rgba(225, 0, 39, 0.2); }
+        input[type="tel"]:focus { 
+            border-color: #E50027; 
+            box-shadow: 0 0 25px rgba(225, 0, 39, 0.25); 
+            background: #0d0d0d;
+        }
 
-        /* СТИЛЬ КНОПКИ GO */
+        /* Кнопка GO */
         .btn {
-            width: 100%; background: #E50027; color: #fff; border: none; padding: 18px; border-radius: 12px;
-            font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; cursor: pointer;
-            transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(225, 0, 39, 0.4);
+            width: 100%; 
+            background: #E50027; 
+            color: #fff; 
+            border: none; 
+            padding: 19px; 
+            border-radius: 14px;
+            font-size: 14px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 2.5px; 
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 6px 25px rgba(225, 0, 39, 0.4);
         }
-        .btn:not(:disabled):hover { background: #ff0b34; transform: translateY(-2px); }
-        .btn:disabled { background: #444; box-shadow: none; cursor: not-allowed; }
+        .btn:not(:disabled):hover { 
+            background: #ff0b34; 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(225, 0, 39, 0.6);
+        }
+        .btn:disabled { background: #222; color: #555; box-shadow: none; cursor: not-allowed; }
 
-        /* Экран Ожидания */
-        .loader-box { text-align: center; padding: 40px 20px; }
+        .hint-box {
+            font-size: 11px;
+            color: #444;
+            margin-top: 25px;
+            line-height: 1.6;
+            border-top: 1px solid #111;
+            padding-top: 15px;
+        }
+        .hint-box span { color: #00cc66; font-weight: 600; }
+
+        /* Элементы загрузчика */
+        .loader-box { padding: 10px 0; }
         .spinner {
-            width: 50px; height: 50px; border: 3px solid #111; border-top: 3px solid #E50027;
-            border-radius: 50%; margin: 0 auto 25px auto; animation: spin 1s linear infinite;
+            width: 45px; height: 45px; border: 3px solid #111; border-top: 3px solid #E50027;
+            border-radius: 50%; margin: 0 auto 25px auto; animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status-text { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-        .sub-text { font-size: 13px; color: #666; margin-bottom: 30px; line-height: 1.5; }
+        .status-text { font-size: 17px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .sub-text { font-size: 13px; color: #666; margin-bottom: 30px; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-    <div class="logo-container">
-        <img src="/ChatGPT Image 11 июн. 2026 г., 23_40_08.png" alt="RG" class="rg-icon">
-        <img src="/ChatGPT Image 11 июн. 2026 г., 23_44_32.png" alt="REDY GO" class="redy-go-text">
-        <div class="logo-subtitle">Клуб знайомств · 18+</div>
-    </div>
-
-    <div class="container">
+    <div class="login-card">
+        
+        <div class="logo-box">
+            <img src="/logo-icon.png" alt="RG" class="logo-icon">
+            <img src="/logo-text.png" alt="REDY GO" class="logo-text">
+            <div class="logo-subtitle">Клуб знайомств · 18+</div>
+        </div>
 
         <div id="screen-login" class="screen active">
             <h2>Ваш Вхід</h2>
-            <div class="input-group">
+            <div class="input-container">
+                <span class="input-label">Номер телефону</span>
                 <input type="tel" id="phone-input" placeholder="+380 97 757 0986" value="+380">
             </div>
             <button id="go-btn" class="btn" onclick="handleLogin()">GO – УВІЙТИ В КЛУБ</button>
+            
+            <div class="hint-box">
+                Безпечно та анонімно.<br>
+                <span>●</span> Верифікація без SMS · Тільки Telegram або Viber
+            </div>
         </div>
 
         <div id="screen-wait" class="screen">
@@ -111,7 +187,7 @@
                 <div class="spinner"></div>
                 <div class="status-text">Очікуємо підтвердження...</div>
                 <div class="sub-text">Поділіться своїм номером у нашому Telegram-боті для миттєвого безпечного входу.</div>
-                <button id="tg-link-btn" class="btn" style="background:#0088cc; box-shadow:0 4px 20px rgba(0,136,204,0.4);" onclick="openTelegram()">ПІДТВЕРДИТИ В TELEGRAM</button>
+                <button id="tg-link-btn" class="btn" style="background:#0088cc; box-shadow:0 5px 25px rgba(0,136,204,0.4);" onclick="openTelegram()">ПІДТВЕРДИТИ В TELEGRAM</button>
             </div>
         </div>
 
@@ -121,13 +197,10 @@
         let currentToken = '';
         let pollingInterval = null;
 
-        // Фикс работы кнопки GO
         async function handleLogin() {
             const phoneInput = document.getElementById('phone-input').value;
             const goBtn = document.getElementById('go-btn');
             
-            console.log('Клик по кнопке GO. Введенный телефон:', phoneInput);
-
             if(!phoneInput || phoneInput.length < 9) {
                 alert('Будь ласка, введіть коректний номер телефону');
                 return;
@@ -137,11 +210,57 @@
             goBtn.innerText = 'ОБРОБКА...';
 
             try {
-                // Пытаемся авторизоваться. Сервер должен быть запущен и БД доступна!
                 const response = await fetch('/api/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone: phoneInput })
                 });
 
-                // Если сервер недоступен, эта
+                const data = await response.json();
+
+                if (data.success && data.token) {
+                    currentToken = data.token;
+                    
+                    document.getElementById('screen-login').classList.remove('active');
+                    document.getElementById('screen-wait').classList.add('active');
+                    
+                    startStatusPolling(currentToken);
+                } else {
+                    alert('Помилка: ' + (data.error || 'Невідома помилка сервера'));
+                    resetButton(goBtn);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Не вдалося зв’язатися з сервером. Перевірте логи Railway.');
+                resetButton(goBtn);
+            }
+        }
+
+        function resetButton(btn) {
+            btn.disabled = false;
+            btn.innerText = 'GO – УВІЙТИ В КЛУБ';
+        }
+
+        function openTelegram() {
+            if(!currentToken) return;
+            window.location.href = `https://t.me/redy_go_bot?start=auth_${currentToken}`;
+        }
+
+        function startStatusPolling(token) {
+            pollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/auth-status?token=${token}`);
+                    const data = await res.json();
+                    
+                    if (data.status === 'verified') {
+                        clearInterval(pollingInterval);
+                        alert('✅ Верифікація успішна!');
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
